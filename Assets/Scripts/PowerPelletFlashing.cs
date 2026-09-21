@@ -1,5 +1,5 @@
 using UnityEngine;
-
+//crab code
 public class PowerPelletFlashing : MonoBehaviour
 {
     [Tooltip("Flash interval in seconds (time visible / time hidden)")]
