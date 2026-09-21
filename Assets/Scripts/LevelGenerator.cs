@@ -3,7 +3,6 @@ using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
-//rotation changes
 public class LevelGenerator : MonoBehaviour
 {
     public GameObject[] tilePrefabs = new GameObject[8];
