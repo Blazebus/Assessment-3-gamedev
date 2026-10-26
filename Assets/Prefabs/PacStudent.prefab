@@ -11,7 +11,6 @@ GameObject:
   - component: {fileID: 3334228606835034812}
   - component: {fileID: 1992855694081722501}
   - component: {fileID: 8387574431726984795}
-  - component: {fileID: 8760130397072989369}
   - component: {fileID: 6700440106493203702}
   m_Layer: 0
   m_Name: PacStudent
@@ -116,35 +115,6 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
---- !u!114 &8760130397072989369
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1027215029716182623}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1f618bd0885cab541926b0a0144377b4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PacStudentMovement
-  speed: 3
-  waypoints:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  corners:
-  - {x: -12.5, y: 13, z: 0}
-  - {x: -7.5, y: 13, z: 0}
-  - {x: -7.5, y: 9, z: 0}
-  - {x: -12.5, y: 9, z: 0}
-  spriteUp: {fileID: -1367470855, guid: 7522a4c52b967c8469ab5863f4ba6b2f, type: 3}
-  spriteDown: {fileID: -147201506, guid: 7522a4c52b967c8469ab5863f4ba6b2f, type: 3}
-  spriteLeft: {fileID: -1550879283, guid: 7522a4c52b967c8469ab5863f4ba6b2f, type: 3}
-  spriteRight: {fileID: -1236332689, guid: 7522a4c52b967c8469ab5863f4ba6b2f, type: 3}
-  spriteDead: {fileID: 1546455681, guid: 7522a4c52b967c8469ab5863f4ba6b2f, type: 3}
-  moveAudioSource: {fileID: 6700440106493203702}
 --- !u!82 &6700440106493203702
 AudioSource:
   m_ObjectHideFlags: 0
