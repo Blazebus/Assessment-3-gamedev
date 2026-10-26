@@ -193,7 +193,7 @@ public class PacStudentController : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if (isDead) return;
+        if (isDead || (GameManager.Instance != null && !GameManager.Instance.isGameActive)) return;
 
         if (other.name.Contains("Tile") && LevelGenerator.IsWall(ExtractTileType(other.name)))
         {

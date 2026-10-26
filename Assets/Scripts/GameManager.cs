@@ -66,11 +66,14 @@ public class GameManager : MonoBehaviour
         // Find HUD if not assigned
         if (hud == null) hud = FindAnyObjectByType<HUDController>();
 
-        // Count initial pellets in scene immediately
+        // Wait a frame for LevelGenerator to finish generation in its Start
+        yield return new WaitForEndOfFrame();
+
+        // Count initial pellets in scene
         CountPellets();
+        Debug.Log("[Test] Total Pellets Counted: " + totalPellets);
 
         StartCoroutine(RoundStartSequence());
-        yield break;
     }
 
     private void CountPellets()
@@ -214,10 +217,12 @@ public class GameManager : MonoBehaviour
     {
         AddScore(10);
         pelletsCollected++;
+        Debug.Log("[Test] Pellet Collected: " + pelletsCollected + "/" + totalPellets);
         
         // Only check for game over if we actually have pellets counted
         if (totalPellets > 0 && pelletsCollected >= totalPellets)
         {
+            Debug.Log("[Test] Game Over triggered by Pellets");
             if (SceneManager.GetActiveScene().name == "RecreatedLevel")
             {
                 PlayerPrefs.SetInt("Level1Completed", 1);
@@ -230,6 +235,7 @@ public class GameManager : MonoBehaviour
     {
         AddScore(50);
         scaredTimer = 10f;
+        Debug.Log("[Test] Power Pellet Collected");
         SetGlobalGhostState(GhostState.Scared);
         if (musicSource != null && scaredMusic != null)
         {
@@ -241,6 +247,7 @@ public class GameManager : MonoBehaviour
     public void CherryCollected()
     {
         AddScore(100);
+        Debug.Log("[Test] Cherry Collected");
         if (musicSource != null && cherrySound != null)
         {
             musicSource.PlayOneShot(cherrySound);
@@ -250,6 +257,7 @@ public class GameManager : MonoBehaviour
     public void GhostEaten(GhostController ghost)
     {
         AddScore(300);
+        Debug.Log("[Test] Ghost Eaten: " + ghost.name);
         if (musicSource != null && ghostEatSound != null)
         {
             musicSource.PlayOneShot(ghostEatSound);
@@ -260,15 +268,17 @@ public class GameManager : MonoBehaviour
     private void SetGlobalGhostState(GhostState state)
     {
         globalGhostState = state;
+        Debug.Log("[Test] Global Ghost State: " + state);
         foreach (var ghost in ghosts)
         {
-            ghost.UpdateState();
+            if (ghost != null) ghost.UpdateState();
         }
     }
 
     public void PacDeath()
     {
         lives--;
+        Debug.Log("[Test] PacDeath called. Lives remaining: " + lives);
         UpdateHUD();
         StartCoroutine(DeathSequence());
     }
@@ -276,6 +286,7 @@ public class GameManager : MonoBehaviour
     private IEnumerator DeathSequence()
     {
         isGameActive = false;
+        Debug.Log("[Test] DeathSequence started");
         if (deathEffect != null) deathEffect.Play();
         if (musicSource != null && deathSound != null) musicSource.PlayOneShot(deathSound);
         
@@ -285,12 +296,14 @@ public class GameManager : MonoBehaviour
         
         if (lives > 0)
         {
+            Debug.Log("[Test] Respawning PacStudent");
             ResetLevel();
             pacStudent.SetDead(false);
             StartCoroutine(RoundStartSequence());
         }
         else
         {
+            Debug.Log("[Test] Game Over triggered by Lives");
             GameOver();
         }
     }
