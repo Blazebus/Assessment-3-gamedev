@@ -36,6 +36,15 @@ public class StartSceneManager : MonoBehaviour
         {
             level2Button.onClick.RemoveListener(LoadLevel2);
             level2Button.onClick.AddListener(LoadLevel2);
+            
+            // Unlock logic
+            bool level1Completed = PlayerPrefs.GetInt("Level1Completed", 0) == 1;
+            level2Button.interactable = level1Completed;
+            
+            // Visual feedback for locked button
+            var canvasGroup = level2Button.GetComponent<CanvasGroup>();
+            if (canvasGroup == null) canvasGroup = level2Button.gameObject.AddComponent<CanvasGroup>();
+            canvasGroup.alpha = level1Completed ? 1f : 0.5f;
         }
 
         InitializeRecords();
@@ -65,44 +74,46 @@ public class StartSceneManager : MonoBehaviour
     public void LoadLevel2()
     {
         PlayClickSound();
-        if (Application.CanStreamedLevelBeLoaded(level2SceneName))
+        if (PlayerPrefs.GetInt("Level1Completed", 0) == 1)
         {
             Debug.Log("Loading Level 2: " + level2SceneName);
             SceneManager.LoadScene(level2SceneName);
         }
         else
         {
-            Debug.Log("Level 2 (" + level2SceneName + ") is not yet implemented or not in Build Settings.");
+            Debug.Log("Level 2 is locked! Complete Level 1 first.");
         }
     }
 
     private void InitializeRecords()
     {
-        int highScore = PlayerPrefs.GetInt("HighScore", 0);
-        float bestTime = PlayerPrefs.GetFloat("BestTime", 0);
+        // Level 1
+        int l1Score = PlayerPrefs.GetInt("Level1_HighScore", 0);
+        float l1Time = PlayerPrefs.GetFloat("Level1_BestTime", 0);
 
         if (level1ScoreText != null)
-            level1ScoreText.text = highScore.ToString("D6");
+            level1ScoreText.text = l1Score.ToString("D6");
 
         if (level1TimeText != null)
-        {
-            if (bestTime > 0)
-            {
-                int mins = (int)(bestTime / 60);
-                int secs = (int)(bestTime % 60);
-                int ms = (int)((bestTime * 100) % 100);
-                level1TimeText.text = string.Format("{0:00}:{1:00}:{2:00}", mins, secs, ms);
-            }
-            else
-            {
-                level1TimeText.text = "00:00:00";
-            }
-        }
+            level1TimeText.text = FormatTime(l1Time);
 
-        if (level2ScoreText != null && string.IsNullOrEmpty(level2ScoreText.text))
-            level2ScoreText.text = "000000";
+        // Level 2
+        int l2Score = PlayerPrefs.GetInt("Level2_HighScore", 0);
+        float l2Time = PlayerPrefs.GetFloat("Level2_BestTime", 0);
 
-        if (level2TimeText != null && string.IsNullOrEmpty(level2TimeText.text))
-            level2TimeText.text = "00:00:00";
+        if (level2ScoreText != null)
+            level2ScoreText.text = l2Score.ToString("D6");
+
+        if (level2TimeText != null)
+            level2TimeText.text = FormatTime(l2Time);
+    }
+
+    private string FormatTime(float time)
+    {
+        if (time <= 0) return "00:00:00";
+        int mins = (int)(time / 60);
+        int secs = (int)(time % 60);
+        int ms = (int)((time * 100) % 100);
+        return string.Format("{0:00}:{1:00}:{2:00}", mins, secs, ms);
     }
 }
