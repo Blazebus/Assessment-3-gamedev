@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 8532577284647921256}
   - component: {fileID: 1831363055847788588}
   - component: {fileID: 8048773200025857183}
+  - component: {fileID: -4674883936474947983}
   m_Layer: 0
   m_Name: Ghost1
   m_TagString: Ghost
@@ -106,6 +107,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GhostController
   currentState: 0
+  ghostType: 1
 --- !u!61 &8048773200025857183
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -152,3 +154,25 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 0.8, y: 0.8}
   m_EdgeRadius: 0
+--- !u!95 &-4674883936474947983
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1440468612883260733}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 22100000, guid: d5fdea3aff245a64195f56ce2dcd44d9, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0

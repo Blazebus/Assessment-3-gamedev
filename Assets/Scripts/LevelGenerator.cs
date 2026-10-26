@@ -53,8 +53,16 @@ public class LevelGenerator : MonoBehaviour
 
     private void Start()
     {
-        DeleteManualLevel();
-        GenerateLevel();
+        if (manualLevel == null)
+        {
+            DeleteManualLevel();
+            GenerateLevel();
+        }
+        else
+        {
+            // If manual level exists, we still want to ensure camera is fitted
+            // and maybe delete other dynamic manual level objects
+        }
         AutoFitCamera();
     }
 
