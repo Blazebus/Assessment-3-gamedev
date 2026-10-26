@@ -28,6 +28,8 @@ public class GhostController : MonoBehaviour
 
     private bool isOutsideSpawn = false;
 
+    private bool isLevel2 = false;
+
     private void Awake()
     {
         animator = GetComponent<Animator>();
@@ -36,6 +38,8 @@ public class GhostController : MonoBehaviour
         
         levelGenerator = Object.FindAnyObjectByType<LevelGenerator>();
         pacStudent = Object.FindAnyObjectByType<PacStudentController>();
+
+        isLevel2 = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == "InnovationScene";
     }
 
     private void Start()
@@ -160,6 +164,8 @@ public class GhostController : MonoBehaviour
         return normalSpeed * 0.5f; // Scared, Recovering, Dead use 50% of Normal speed
     }
 
+    private GhostController blinky;
+
     private void DetermineNextMove()
     {
         // If inside spawn, follow exit logic
@@ -172,17 +178,33 @@ public class GhostController : MonoBehaviour
         List<int> validDirections = GetValidDirections();
         if (validDirections.Count == 0) return;
 
+        // Forced turn if only 1 option
+        if (validDirections.Count == 1)
+        {
+            StartMove(validDirections[0]);
+            return;
+        }
+
         int selectedDir = -1;
         
-        // If Scared or Recovering, all use Ghost 1 behavior
-        int behaviorType = (currentState == GhostState.Scared || currentState == GhostState.Recovering) ? 1 : ghostType;
-
-        switch (behaviorType)
+        // If Scared or Recovering, all use Ghost 1 behavior (random/flee)
+        if (currentState == GhostState.Scared || currentState == GhostState.Recovering)
         {
-            case 1: selectedDir = BehaviorGhost1(validDirections); break;
-            case 2: selectedDir = BehaviorGhost2(validDirections); break;
-            case 3: selectedDir = BehaviorGhost3(validDirections); break;
-            case 4: selectedDir = BehaviorGhost4(validDirections); break;
+            selectedDir = BehaviorGhost1(validDirections);
+        }
+        else if (isLevel2)
+        {
+            selectedDir = SmartBehavior(validDirections);
+        }
+        else
+        {
+            switch (ghostType)
+            {
+                case 1: selectedDir = BehaviorGhost1(validDirections); break;
+                case 2: selectedDir = BehaviorGhost2(validDirections); break;
+                case 3: selectedDir = BehaviorGhost3(validDirections); break;
+                case 4: selectedDir = BehaviorGhost4(validDirections); break;
+            }
         }
 
         if (selectedDir != -1)
@@ -191,12 +213,100 @@ public class GhostController : MonoBehaviour
         }
     }
 
+    private int SmartBehavior(List<int> valid)
+    {
+        if (pacStudent == null) return valid[Random.Range(0, valid.Count)];
+
+        Vector2Int pacPos = new Vector2Int(pacStudent.CurrentGridRow, pacStudent.CurrentGridCol);
+        Vector2Int target = pacPos;
+        
+        switch (ghostType)
+        {
+            case 1: // Blinky Style: Aggressive Pursuit
+                target = pacPos;
+                break;
+            case 2: // Pinky Style: Interception (predictive)
+                target = GetPredictedPacPos(4);
+                break;
+            case 3: // Inky Style: Cooperation (flanking)
+                target = GetCooperativeTarget(pacPos);
+                break;
+            case 4: // Clyde Style: Aggressive nearby, else unpredictable
+                float dist = Vector2.Distance(new Vector2(currentGridRow, currentGridCol), new Vector2(pacPos.x, pacPos.y));
+                if (dist < 8) target = pacPos;
+                else target = new Vector2Int(totalRows - 2, 1); // Corner
+                break;
+        }
+
+        return GetBestDirection(valid, target);
+    }
+
+    private Vector2Int GetPredictedPacPos(int offset)
+    {
+        Vector2Int pacPos = new Vector2Int(pacStudent.CurrentGridRow, pacStudent.CurrentGridCol);
+        int pacDir = pacStudent.CurrentDirection;
+
+        Vector2Int offsetVec = Vector2Int.zero;
+        switch (pacDir)
+        {
+            case 0: offsetVec = new Vector2Int(-offset, 0); break; // Up
+            case 1: offsetVec = new Vector2Int(offset, 0); break;  // Down
+            case 2: offsetVec = new Vector2Int(0, -offset); break; // Left
+            case 3: offsetVec = new Vector2Int(0, offset); break;  // Right
+        }
+
+        Vector2Int predicted = pacPos + offsetVec;
+        predicted.x = Mathf.Clamp(predicted.x, 0, totalRows - 1);
+        predicted.y = Mathf.Clamp(predicted.y, 0, totalCols - 1);
+        
+        return predicted;
+    }
+
+    private Vector2Int GetCooperativeTarget(Vector2Int pacPos)
+    {
+        if (blinky == null)
+        {
+            foreach (var g in Object.FindObjectsByType<GhostController>(FindObjectsSortMode.None))
+            {
+                if (g.ghostType == 1) { blinky = g; break; }
+            }
+        }
+
+        if (blinky == null) return pacPos;
+
+        Vector2Int pivot = GetPredictedPacPos(2);
+        Vector2Int blinkyPos = new Vector2Int(blinky.currentGridRow, blinky.currentGridCol);
+        
+        Vector2Int target = pivot + (pivot - blinkyPos);
+        target.x = Mathf.Clamp(target.x, 0, totalRows - 1);
+        target.y = Mathf.Clamp(target.y, 0, totalCols - 1);
+        
+        return target;
+    }
+
+    private int GetBestDirection(List<int> valid, Vector2Int targetGrid)
+    {
+        int bestDir = valid[0];
+        float minDist = float.MaxValue;
+
+        foreach (int d in valid)
+        {
+            Vector2Int next = GetAdjacentGridPos(currentGridRow, currentGridCol, d);
+            float dist = Vector2.Distance(new Vector2(next.x, next.y), new Vector2(targetGrid.x, targetGrid.y));
+            if (dist < minDist)
+            {
+                minDist = dist;
+                bestDir = d;
+            }
+        }
+        return bestDir;
+    }
+
     private void MoveTowardsExit()
     {
         // Ghost 1 & 3 use upper exit (row 12, col 13/14)
         // Ghost 2 & 4 use lower exit (row 16, col 13/14)
         int targetRow = (ghostType == 1 || ghostType == 3) ? 12 : 16;
-        int targetCol = 13; // Middle col
 
         if (currentGridRow == targetRow)
         {
@@ -211,7 +321,7 @@ public class GhostController : MonoBehaviour
 
     private int BehaviorGhost1(List<int> valid)
     {
-        // Random direction increasing or maintaining distance to PacStudent
+        // Level 1 behavior: Random direction increasing or maintaining distance to PacStudent
         float currentDist = GetDistanceToPac(currentGridRow, currentGridCol);
         List<int> options = new List<int>();
         foreach (int d in valid)
@@ -225,7 +335,7 @@ public class GhostController : MonoBehaviour
 
     private int BehaviorGhost2(List<int> valid)
     {
-        // Random direction decreasing or maintaining distance to PacStudent
+        // Level 1 behavior: Random direction decreasing or maintaining distance to PacStudent
         float currentDist = GetDistanceToPac(currentGridRow, currentGridCol);
         List<int> options = new List<int>();
         foreach (int d in valid)
@@ -239,22 +349,18 @@ public class GhostController : MonoBehaviour
 
     private int BehaviorGhost3(List<int> valid)
     {
-        // Random direction (already non-reversing by GetValidDirections)
+        // Level 1 behavior: Random direction (already non-reversing by GetValidDirections)
         return valid[Random.Range(0, valid.Count)];
     }
 
     private int BehaviorGhost4(List<int> valid)
     {
-        // Clockwise path around the outer wall
-        // Prioritize: Right, Down, Left, Up in a clockwise sense depending on position or just try to hug the wall.
-        // A simple way to follow clockwise is to always try to turn right relative to current direction, then straight, then left.
+        // Level 1 behavior: Clockwise path around the outer wall
         int[] clockwiseOrder = { 3, 1, 2, 0 }; // Right, Down, Left, Up
         
-        // Find current direction index in clockwise order
         int currentIndex = -1;
         for(int i=0; i<4; i++) if(clockwiseOrder[i] == currentDirection) currentIndex = i;
 
-        // Try next directions in clockwise order starting from current
         for (int i = 0; i < 4; i++)
         {
             int nextDir = clockwiseOrder[(currentIndex + i) % 4];
@@ -308,11 +414,7 @@ public class GhostController : MonoBehaviour
         // Must never enter walls
         if (LevelGenerator.IsWall(type)) return false;
 
-        // Must treat teleporters as walls (Teleporters are not in fullGrid, but they are at the edges)
-        // Check for teleporter tag objects at this position? 
-        // Actually, in this grid system, positions at col 0 and totalCols-1 are adjacent to teleporters.
-        // If it's not a wall and within bounds, it's walkable.
-        // Wait, the level has a tunnel at row 14. 
+        // Must treat teleporters as walls
         if (row == 14 && (col == 0 || col == totalCols - 1)) return false;
 
         // May not re-enter spawn area unless Dead

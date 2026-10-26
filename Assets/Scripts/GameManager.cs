@@ -171,12 +171,17 @@ public class GameManager : MonoBehaviour
     {
         if (hud == null) return;
 
-        if (hud.ScoreText != null) hud.ScoreText.text = score.ToString();
+        if (hud.ScoreText != null) hud.ScoreText.text = score.ToString("D6");
         
         int mins = (int)(gameTimer / 60);
         int secs = (int)(gameTimer % 60);
         int ms = (int)((gameTimer * 100) % 100); // centiseconds
         if (hud.TimerText != null) hud.TimerText.text = string.Format("{0:00}:{1:00}:{2:00}", mins, secs, ms);
+
+        if (hud.LevelNameText != null)
+        {
+            hud.LevelNameText.text = SceneManager.GetActiveScene().name == "InnovationScene" ? "Level 2" : "Level 1";
+        }
 
         if (scaredTimer > 0)
         {
@@ -207,6 +212,10 @@ public class GameManager : MonoBehaviour
         pelletsCollected++;
         if (pelletsCollected >= totalPellets)
         {
+            if (SceneManager.GetActiveScene().name == "RecreatedLevel")
+            {
+                PlayerPrefs.SetInt("Level1Completed", 1);
+            }
             GameOver();
         }
     }
@@ -301,13 +310,17 @@ public class GameManager : MonoBehaviour
 
     private void SaveHighScore()
     {
-        int bestScore = PlayerPrefs.GetInt("HighScore", 0);
-        float bestTime = PlayerPrefs.GetFloat("BestTime", float.MaxValue);
+        string levelPrefix = SceneManager.GetActiveScene().name == "InnovationScene" ? "Level2" : "Level1";
+        string scoreKey = levelPrefix + "_HighScore";
+        string timeKey = levelPrefix + "_BestTime";
+
+        int bestScore = PlayerPrefs.GetInt(scoreKey, 0);
+        float bestTime = PlayerPrefs.GetFloat(timeKey, float.MaxValue);
 
         if (score > bestScore || (score == bestScore && gameTimer < bestTime))
         {
-            PlayerPrefs.SetInt("HighScore", score);
-            PlayerPrefs.SetFloat("BestTime", gameTimer);
+            PlayerPrefs.SetInt(scoreKey, score);
+            PlayerPrefs.SetFloat(timeKey, gameTimer);
             PlayerPrefs.Save();
         }
     }
