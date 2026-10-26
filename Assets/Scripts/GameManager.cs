@@ -129,7 +129,12 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    private void UpdateMusic()
+    public void GhostResurrected()
+    {
+        UpdateMusic();
+    }
+
+    public void UpdateMusic()
     {
         if (musicSource == null) return;
 
