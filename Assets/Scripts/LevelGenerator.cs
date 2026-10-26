@@ -315,6 +315,7 @@ public class LevelGenerator : MonoBehaviour
             {
                 var col = tileObj.AddComponent<BoxCollider2D>();
                 col.size = Vector2.one;
+                col.isTrigger = true;
             }
 
             return tileObj;

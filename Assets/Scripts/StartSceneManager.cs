@@ -78,11 +78,26 @@ public class StartSceneManager : MonoBehaviour
 
     private void InitializeRecords()
     {
-        if (level1ScoreText != null && string.IsNullOrEmpty(level1ScoreText.text))
-            level1ScoreText.text = "000000";
+        int highScore = PlayerPrefs.GetInt("HighScore", 0);
+        float bestTime = PlayerPrefs.GetFloat("BestTime", 0);
 
-        if (level1TimeText != null && string.IsNullOrEmpty(level1TimeText.text))
-            level1TimeText.text = "00:00:00";
+        if (level1ScoreText != null)
+            level1ScoreText.text = highScore.ToString("D6");
+
+        if (level1TimeText != null)
+        {
+            if (bestTime > 0)
+            {
+                int mins = (int)(bestTime / 60);
+                int secs = (int)(bestTime % 60);
+                int ms = (int)((bestTime * 100) % 100);
+                level1TimeText.text = string.Format("{0:00}:{1:00}:{2:00}", mins, secs, ms);
+            }
+            else
+            {
+                level1TimeText.text = "00:00:00";
+            }
+        }
 
         if (level2ScoreText != null && string.IsNullOrEmpty(level2ScoreText.text))
             level2ScoreText.text = "000000";

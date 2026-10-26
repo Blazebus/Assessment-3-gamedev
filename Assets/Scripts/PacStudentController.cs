@@ -147,10 +147,16 @@ public class PacStudentController : MonoBehaviour
         transform.position = GetWorldPosition(currentGridRow, currentGridCol);
     }
 
+    private Vector2Int previousGridPos;
+    private bool hasBumped = false;
+
     private void Update()
     {
-        if (isDead)
+        if (isDead || (GameManager.Instance != null && !GameManager.Instance.isGameActive))
+        {
+            StopMovement();
             return;
+        }
 
         ReadPlayerInput();
 
@@ -158,6 +164,9 @@ public class PacStudentController : MonoBehaviour
 
         if (!isLerping)
         {
+            previousGridPos = new Vector2Int(currentGridRow, currentGridCol);
+            hasBumped = false;
+
             // If not lerping: try lastInput's adjacent grid cell
             Vector2Int lastTarget = GetAdjacentCell(currentGridRow, currentGridCol, lastInput);
             if (lastInput != KeyCode.None && lastTarget != new Vector2Int(currentGridRow, currentGridCol) && IsWalkable(lastTarget.x, lastTarget.y))
@@ -178,6 +187,117 @@ public class PacStudentController : MonoBehaviour
                     // Else stop
                     StopMovement();
                 }
+            }
+        }
+    }
+
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        if (isDead) return;
+
+        if (other.name.Contains("Tile") && LevelGenerator.IsWall(ExtractTileType(other.name)))
+        {
+            HandleWallCollision();
+        }
+        else if (other.CompareTag("Pellet"))
+        {
+            Destroy(other.gameObject);
+            GameManager.Instance.PelletCollected();
+        }
+        else if (other.CompareTag("PowerPellet"))
+        {
+            Destroy(other.gameObject);
+            GameManager.Instance.PowerPelletCollected();
+        }
+        else if (other.name.Contains("Cherry"))
+        {
+            Destroy(other.gameObject);
+            GameManager.Instance.CherryCollected();
+        }
+        else if (other.CompareTag("Ghost"))
+        {
+            GhostController ghost = other.GetComponent<GhostController>();
+            if (ghost != null)
+            {
+                if (ghost.currentState == GhostController.GhostState.Normal)
+                {
+                    GameManager.Instance.PacDeath();
+                }
+                else if (ghost.currentState == GhostController.GhostState.Scared || ghost.currentState == GhostController.GhostState.Recovering)
+                {
+                    GameManager.Instance.GhostEaten(ghost);
+                }
+            }
+        }
+        else if (other.CompareTag("Teleporter"))
+        {
+            HandleTeleportation(other.gameObject);
+        }
+    }
+
+    private int ExtractTileType(string name)
+    {
+        // Name format Tile_RR_CC_TypeX
+        string[] parts = name.Split('_');
+        if (parts.Length >= 4)
+        {
+            string typeStr = parts[3].Replace("Type", "");
+            int type;
+            if (int.TryParse(typeStr, out type)) return type;
+        }
+        return 0;
+    }
+
+    private void HandleWallCollision()
+    {
+        if (!hasBumped)
+        {
+            hasBumped = true;
+            if (tweener != null) tweener.CancelTween(transform);
+            
+            // Snap back to previous valid grid position
+            currentGridRow = previousGridPos.x;
+            currentGridCol = previousGridPos.y;
+            transform.position = GetWorldPosition(currentGridRow, currentGridCol);
+            
+            StopMovement();
+
+            // Play bump sound and effect
+            if (GameManager.Instance != null)
+            {
+                if (moveAudioSource != null && GameManager.Instance.wallBumpSound != null)
+                    moveAudioSource.PlayOneShot(GameManager.Instance.wallBumpSound);
+                
+                if (GameManager.Instance.wallBumpEffect != null)
+                {
+                    GameManager.Instance.wallBumpEffect.transform.position = transform.position;
+                    GameManager.Instance.wallBumpEffect.Play();
+                }
+            }
+        }
+    }
+
+    private void HandleTeleportation(GameObject teleporter)
+    {
+        // Simple logic: if at col 0, move to totalCols - 1. If at totalCols - 1, move to 0.
+        if (currentGridCol <= 0)
+        {
+            currentGridCol = totalCols - 1;
+        }
+        else if (currentGridCol >= totalCols - 1)
+        {
+            currentGridCol = 0;
+        }
+        
+        transform.position = GetWorldPosition(currentGridRow, currentGridCol);
+        
+        // Restart tween if moving
+        if (currentInput != KeyCode.None)
+        {
+            Vector2Int next = GetAdjacentCell(currentGridRow, currentGridCol, currentInput);
+            if (IsWalkable(next.x, next.y))
+            {
+                StartMoveToCell(next.x, next.y, currentInput);
             }
         }
     }
