@@ -3,7 +3,11 @@
 --- !u!78 &1
 TagManager:
   serializedVersion: 3
-  tags: []
+  tags:
+  - Pellet
+  - PowerPellet
+  - Ghost
+  - Teleporter
   layers:
   - Default
   - TransparentFX
