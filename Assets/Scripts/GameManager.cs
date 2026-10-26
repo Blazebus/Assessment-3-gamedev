@@ -60,18 +60,22 @@ public class GameManager : MonoBehaviour
         pacStudent = FindAnyObjectByType<PacStudentController>();
         if (pacStudent != null) pacStartPos = pacStudent.transform.position;
         
+        ghosts.Clear();
         ghosts.AddRange(FindObjectsByType<GhostController>(FindObjectsSortMode.None));
         
         // Find HUD if not assigned
         if (hud == null) hud = FindAnyObjectByType<HUDController>();
 
-        // Wait a frame for LevelGenerator to finish instantiating pellets
-        yield return null;
-
-        // Count initial pellets in scene
-        totalPellets = GameObject.FindGameObjectsWithTag("Pellet").Length + GameObject.FindGameObjectsWithTag("PowerPellet").Length;
+        // Count initial pellets in scene immediately
+        CountPellets();
 
         StartCoroutine(RoundStartSequence());
+        yield break;
+    }
+
+    private void CountPellets()
+    {
+        totalPellets = GameObject.FindGameObjectsWithTag("Pellet").Length + GameObject.FindGameObjectsWithTag("PowerPellet").Length;
     }
 
     private IEnumerator RoundStartSequence()
@@ -210,7 +214,9 @@ public class GameManager : MonoBehaviour
     {
         AddScore(10);
         pelletsCollected++;
-        if (pelletsCollected >= totalPellets)
+        
+        // Only check for game over if we actually have pellets counted
+        if (totalPellets > 0 && pelletsCollected >= totalPellets)
         {
             if (SceneManager.GetActiveScene().name == "RecreatedLevel")
             {
